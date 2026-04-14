@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  mediaos-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mediaos-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_ODOO_URL=${NEXT_PUBLIC_ODOO_URL}
+      - NEXT_PUBLIC_ODOO_DB=${NEXT_PUBLIC_ODOO_DB:-MediaAi}
+      - NEXT_PUBLIC_APP_NAME=MediaOS
+    networks:
+      - mediaos-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: mediaos-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - mediaos-web
+    networks:
+      - mediaos-net
+
+networks:
+  mediaos-net:
+    driver: bridge
