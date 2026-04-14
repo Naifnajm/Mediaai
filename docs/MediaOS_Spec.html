@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediaOS — وثيقة المواصفات التقنية</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --dark: #191c1f;
+    --white: #ffffff;
+    --surface: #f4f4f4;
+    --surface-2: #eaeaea;
+    --accent: #494fdf;
+    --success: #00a87e;
+    --warning: #ec7e00;
+    --danger: #e23b4a;
+    --info: #007bc2;
+    --text-primary: #191c1f;
+    --text-secondary: #505a63;
+    --text-muted: #8d969e;
+    --border: #e4e4e8;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-pill: 9999px;
+    --font: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+    --font-mono: 'Fira Code', 'Consolas', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: #f8f8fa;
+    color: var(--text-primary);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ── LAYOUT ─────────────────────────── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ────────────────────────── */
+  .sidebar {
+    width: 280px;
+    background: var(--dark);
+    position: fixed;
+    top: 0; right: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .sidebar-logo p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  .nav-group { padding: 0 12px; margin-bottom: 8px; }
+  .nav-group-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    padding: 8px 8px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: rgba(255,255,255,0.6);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover, .nav-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+  .nav-item span.dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    flex-shrink: 0;
+  }
+  .nav-item.active span.dot { background: var(--accent); }
+
+  /* ── MAIN ───────────────────────────── */
+  .main {
+    margin-right: 280px;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ────────────────────────── */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .topbar-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-info { background: rgba(0,123,194,0.1); color: var(--info); }
+  .badge-success { background: rgba(0,168,126,0.1); color: var(--success); }
+  .badge-warning { background: rgba(236,126,0,0.1); color: var(--warning); }
+  .badge-dark { background: var(--dark); color: #fff; }
+
+  /* ── CONTENT ────────────────────────── */
+  .content { padding: 40px; max-width: 960px; }
+
+  /* ── SECTION ────────────────────────── */
+  .section {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .section-body { padding: 24px 28px; }
+
+  /* ── HEADINGS ───────────────────────── */
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 20px 0 10px;
+    color: var(--text-primary);
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 14px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  p { color: var(--text-secondary); margin-bottom: 10px; line-height: 1.75; }
+
+  /* ── CODE BLOCKS ────────────────────── */
+  pre {
+    background: #0d1117;
+    color: #e6edf3;
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 12px 0;
+    direction: ltr;
+    text-align: left;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: rgba(73,79,223,0.08);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: 13px;
+  }
+  /* syntax highlight approximation */
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .fn { color: #d2a8ff; }
+  .num { color: #79c0ff; }
+
+  /* ── TABLES ─────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 12px 0;
+  }
+  th {
+    background: var(--surface);
+    padding: 10px 14px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  td code { font-size: 12px; }
+
+  /* ── GRID ───────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* ── CARDS ──────────────────────────── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+  .card-dark {
+    background: var(--dark);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    color: #fff;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .card-value { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .card-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── STEP ───────────────────────────── */
+  .step-list { display: flex; flex-direction: column; gap: 12px; }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--dark);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h4 { margin: 0 0 4px; font-size: 14px; color: var(--text-primary); text-transform: none; letter-spacing: 0; }
+  .step-content p { margin: 0; font-size: 13px; }
+
+  /* ── INFO BOX ───────────────────────── */
+  .info-box {
+    background: rgba(73,79,223,0.06);
+    border: 1px solid rgba(73,79,223,0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    font-size: 13.5px;
+    color: #2a2f99;
+    margin: 12px 0;
+  }
+  .warn-box {
+    background: rgba(236,126,0,0.06);
+    border: 1px solid rgba(236,126,0,0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    font-size: 13.5px;
+    color: #8a4a00;
+    margin: 12px 0;
+  }
+
+  /* ── DIVIDER ────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* ── PRINT ──────────────────────────── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-right: 0; }
+    .topbar { position: relative; }
+  }
+
+  /* ── UI PREVIEW ─────────────────────── */
+  .ui-preview {
+    background: #f0f0f2;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin: 12px 0;
+  }
+  .ui-shell {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    height: 320px;
+  }
+  .ui-sidebar-mini {
+    width: 48px;
+    background: var(--dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 8px;
+  }
+  .ui-sidebar-mini .dot { width: 24px; height: 24px; border-radius: 8px; background: rgba(255,255,255,0.12); }
+  .ui-sidebar-mini .dot.active { background: var(--accent); }
+  .ui-content-mini { flex: 1; padding: 16px; overflow: hidden; }
+  .ui-topbar-mini {
+    height: 36px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    margin: -16px -16px 12px;
+  }
+  .ui-topbar-mini .pill { height: 8px; border-radius: 9999px; background: var(--surface-2); }
+  .skeleton { height: 12px; border-radius: 6px; background: var(--surface-2); margin-bottom: 8px; }
+  .skeleton.dark { background: rgba(255,255,255,0.1); }
+
+  /* ── COLOR SWATCH ───────────────────── */
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .swatch {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .swatch label {
+    position: absolute;
+    bottom: -18px;
+    left: 50%; transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* module list */
+  .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .module-card {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .module-card .icon { font-size: 20px; }
+  .module-card .name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+  .module-card .tag { font-size: 10px; color: var(--text-muted); }
+
+  /* api endpoint list */
+  .endpoint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--surface);
+    margin-bottom: 6px;
+    font-size: 13px;
+    direction: ltr;
+  }
+  .method { font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 5px; }
+  .method.post { background: rgba(0,168,126,0.12); color: var(--success); }
+  .method.get  { background: rgba(0,123,194,0.12); color: var(--info); }
+  .path { color: var(--text-primary); font-family: var(--font-mono); }
+  .desc { color: var(--text-muted); font-size: 12px; margin-right: auto; direction: rtl; }
+
+  /* screen wireframe */
+  .wireframe {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    line-height: 1.8;
+    direction: ltr;
+    text-align: left;
+    margin: 10px 0;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>MediaOS</h1>
+    <p>وثيقة المواصفات التقنية v1.0</p>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">الوثيقة</div>
+    <a class="nav-item active" href="#overview"><span class="dot"></span>نظرة عامة</a>
+    <a class="nav-item" href="#modules"><span class="dot"></span>الموديلات</a>
+    <a class="nav-item" href="#architecture"><span class="dot"></span>المعمارية</a>
+    <a class="nav-item" href="#api"><span class="dot"></span>طبقة API</a>
+    <a class="nav-item" href="#design"><span class="dot"></span>Design System</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">الشاشات</div>
+    <a class="nav-item" href="#screens-shell"><span class="dot"></span>Shell الرئيسي</a>
+    <a class="nav-item" href="#screens-dashboard"><span class="dot"></span>Dashboard</a>
+    <a class="nav-item" href="#screens-pattern"><span class="dot"></span>نمط الشاشات</a>
+    <a class="nav-item" href="#screens-form"><span class="dot"></span>Form View</a>
+    <a class="nav-item" href="#screens-special"><span class="dot"></span>شاشات مخصصة</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">التقني</div>
+    <a class="nav-item" href="#hooks"><span class="dot"></span>Custom Hooks</a>
+    <a class="nav-item" href="#upload"><span class="dot"></span>رفع الملفات</a>
+    <a class="nav-item" href="#realtime"><span class="dot"></span>Real-time</a>
+    <a class="nav-item" href="#performance"><span class="dot"></span>الأداء</a>
+    <a class="nav-item" href="#summary"><span class="dot"></span>ملخص القرارات</a>
+  </div>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">MediaOS — وثيقة المواصفات التقنية الشاملة</div>
+    <div class="topbar-meta">
+      <span class="badge badge-info">Odoo 19 Community</span>
+      <span class="badge badge-dark">25 موديل مخصص</span>
+      <span style="color:var(--text-muted); font-size:12px">إبريل 2026</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ 1. OVERVIEW ══ -->
+    <div class="section" id="overview">
+      <div class="section-header">
+        <div class="section-icon">🎬</div>
+        <div>
+          <div class="section-title">١. نظرة عامة على المشروع</div>
+          <div class="section-subtitle">تطبيق ويب خارجي PWA يتحكم بـ Odoo 19 بالكامل</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <p>بناء <strong>Progressive Web App</strong> يتصل بـ Odoo 19 Community عبر JSON-RPC API، يعرض جميع الـ 46 موديل المثبت في قاعدة بيانات <code>MediaAi</code>، ويتيح عمليات CRUD الكاملة، رفع الملفات، والتحكم الشامل — بواجهة بمستوى Revolut.com.</p>
+
+        <div class="info-box">
+          📦 تم تحليل backup قاعدة البيانات <strong>MediaAi v19.0</strong> — 46 موديل مثبت، 25 موديل مخصص، تاريخ الإنشاء: 11 إبريل 2026
+        </div>
+
+        <h3>Stack التقني</h3>
+        <div class="grid-2">
+          <div>
+            <h4>Frontend</h4>
+            <table>
+              <tr><td><code>Next.js 15</code></td><td>App Router + SSR</td></tr>
+              <tr><td><code>TypeScript 5</code></td><td>Type Safety</td></tr>
+              <tr><td><code>Tailwind CSS</code></td><td>مع Revolut Tokens</td></tr>
+              <tr><td><code>Zustand</code></td><td>Global State</td></tr>
+              <tr><td><code>TanStack Query v5</code></td><td>Server State + Cache</td></tr>
+              <tr><td><code>React Hook Form</code></td><td>Forms + Zod Validation</td></tr>
+              <tr><td><code>Framer Motion</code></td><td>Animations</td></tr>
+              <tr><td><code>Recharts</code></td><td>Analytics Charts</td></tr>
+            </table>
+          </div>
+          <div>
+            <h4>Integration</h4>
+            <table>
+              <tr><td><code>JSON-RPC</code></td><td>Odoo API Protocol</td></tr>
+              <tr><td><code>Odoo Bus</code></td><td>WebSocket Real-time</td></tr>
+              <tr><td><code>react-dropzone</code></td><td>File Upload UI</td></tr>
+              <tr><td><code>Tus.js</code></td><td>Resumable Upload</td></tr>
+              <tr><td><code>@dnd-kit</code></td><td>Drag & Drop</td></tr>
+              <tr><td><code>Docker + Nginx</code></td><td>Deployment</td></tr>
+              <tr><td><code>IBM Plex Arabic</code></td><td>RTL Typography</td></tr>
+              <tr><td><code>Aeonik Pro</code></td><td>Display Headings</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 2. MODULES ══ -->
+    <div class="section" id="modules">
+      <div class="section-header">
+        <div class="section-icon">📦</div>
+        <div>
+          <div class="section-title">٢. الموديلات المخصصة (25 موديل نشط)</div>
+          <div class="section-subtitle">من backup MediaAi v19.0</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <h3>موديلات الإنتاج الأساسية</h3>
+        <div class="module-grid">
+          <div class="module-card"><div class="icon">🎬</div><div><div class="name">media_production</div><div class="tag">Production Suite — Core</div></div></div>
+          <div class="module-card"><div class="icon">📁</div><div><div class="name">media_project</div><div class="tag">Project Management</div></div></div>
+          <div class="module-card"><div class="icon">✍️</div><div><div class="name">media_creative</div><div class="tag">Creative & Script</div></div></div>
+          <div class="module-card"><div class="icon">🤖</div><div><div class="name">media_ai_breakdown</div><div class="tag">AI Script Breakdown</div></div></div>
+          <div class="module-card"><div class="icon">🎭</div><div><div class="name">media_casting</div><div class="tag">Casting Management</div></div></div>
+          <div class="module-card"><div class="icon">👷</div><div><div class="name">media_crew</div><div class="tag">Crew Management</div></div></div>
+          <div class="module-card"><div class="icon">📅</div><div><div class="name">media_schedule</div><div class="tag">Shooting Schedule</div></div></div>
+          <div class="module-card"><div class="icon">📍</div><div><div class="name">media_locations</div><div class="tag">Location Management</div></div></div>
+          <div class="module-card"><div class="icon">🎥</div><div><div class="name">media_equipment</div><div class="tag">Equipment Management</div></div></div>
+          <div class="module-card"><div class="icon">🛡️</div><div><div class="name">media_safety</div><div class="tag">Safety & Compliance</div></div></div>
+          <div class="module-card"><div class="icon">💰</div><div><div class="name">media_budget</div><div class="tag">Budget Management</div></div></div>
+          <div class="module-card"><div class="icon">💵</div><div><div class="name">media_petty_cash</div><div class="tag">Petty Cash</div></div></div>
+          <div class="module-card"><div class="icon">📄</div><div><div class="name">media_contracts</div><div class="tag">Contracts & Deal Memos</div></div></div>
+          <div class="module-card"><div class="icon">✅</div><div><div class="name">media_clearances</div><div class="tag">Clearances & Releases</div></div></div>
+          <div class="module-card"><div class="icon">🎵</div><div><div class="name">media_music_rights</div><div class="tag">Music Rights</div></div></div>
+          <div class="module-card"><div class="icon">☂️</div><div><div class="name">media_insurance</div><div class="tag">Production Insurance</div></div></div>
+          <div class="module-card"><div class="icon">🗄️</div><div><div class="name">media_dam</div><div class="tag">Digital Asset Mgmt</div></div></div>
+          <div class="module-card"><div class="icon">⚡</div><div><div class="name">media_vfx</div><div class="tag">VFX & Post Production</div></div></div>
+          <div class="module-card"><div class="icon">📡</div><div><div class="name">media_distribution</div><div class="tag">Distribution Rights</div></div></div>
+          <div class="module-card"><div class="icon">📊</div><div><div class="name">media_analytics</div><div class="tag">Analytics & KPIs</div></div></div>
+          <div class="module-card"><div class="icon">💼</div><div><div class="name">media_crm</div><div class="tag">Client & Broadcaster CRM</div></div></div>
+          <div class="module-card"><div class="icon">👤</div><div><div class="name">media_hr_sa</div><div class="tag">HR Saudi Arabia</div></div></div>
+          <div class="module-card"><div class="icon">💳</div><div><div class="name">media_payroll_sa</div><div class="tag">Payroll SA — GOSI/WPS</div></div></div>
+          <div class="module-card"><div class="icon">🎁</div><div><div class="name">media_wrap</div><div class="tag">Wrap Process</div></div></div>
+          <div class="module-card"><div class="icon">🎨</div><div><div class="name">theme_media_studio</div><div class="tag">UI Theme (SCSS)</div></div></div>
+        </div>
+
+        <h3 style="margin-top:24px">موديلات Odoo 19 الأساسية المتكاملة</h3>
+        <table>
+          <thead><tr><th>الموديل</th><th>الغرض في التطبيق</th></tr></thead>
+          <tbody>
+            <tr><td><code>project.project</code></td><td>مشاريع الإنتاج</td></tr>
+            <tr><td><code>project.task</code></td><td>المهام والتسليمات</td></tr>
+            <tr><td><code>hr.employee</code></td><td>الموظفون والطاقم</td></tr>
+            <tr><td><code>account.move</code></td><td>الفواتير والمدفوعات</td></tr>
+            <tr><td><code>sale.order</code></td><td>عروض الأسعار والعقود</td></tr>
+            <tr><td><code>purchase.order</code></td><td>طلبات الشراء</td></tr>
+            <tr><td><code>documents.document</code></td><td>مستودع المستندات</td></tr>
+            <tr><td><code>sign.request</code></td><td>طلبات التوقيع الإلكتروني</td></tr>
+            <tr><td><code>mail.message</code></td><td>Chatter والتعليقات</td></tr>
+            <tr><td><code>mail.activity</code></td><td>الأنشطة والمتابعة</td></tr>
+            <tr><td><code>res.partner</code></td><td>العملاء والموردون</td></tr>
+            <tr><td><code>calendar.event</code></td><td>الجدولة الزمنية</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 3. ARCHITECTURE ══ -->
+    <div class="section" id="architecture">
+      <div class="section-header">
+        <div class="section-icon">🏗️</div>
+        <div>
+          <div class="section-title">٣. المعمارية التقنية</div>
+          <div class="section-subtitle">كيف يتصل التطبيق بـ Odoo</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <h3>Endpoints الأساسية</h3>
+        <div class="endpoint"><span class="method post">POST</span><span class="path">/web/session/authenticate</span><span class="desc">تسجيل الدخول</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="path">/web/dataset/call_kw</span><span class="desc">CRUD — search_read / create / write / unlink</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="path">/web/binary/upload_attachment</span><span class="desc">رفع الملفات والمرفقات</span></div>
+        <div class="endpoint"><span class="method post">POST</span><span class="path">/web/dataset/call_button</span><span class="desc">تنفيذ الأزرار والأكشن</span></div>
+        <div class="endpoint"><span class="method get">WS</span><span class="path">/websocket</span><span class="desc">Real-time — Odoo Bus</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="path">/report/pdf/{report_name}/{id}</span><span class="desc">تصدير PDF</span></div>
+        <div class="endpoint"><span class="method get">GET</span><span class="path">/web/image/{model}/{id}/{field}</span><span class="desc">جلب الصور والثامبنيلز</span></div>
+
+        <h3>هيكل المجلدات</h3>
+        <pre>mediaos-app/
+├── app/
+│   ├── (auth)/login/           ← شاشة الدخول
+│   └── (dashboard)/
+│       ├── layout.tsx          ← Shell الرئيسي (Sidebar + Topbar)
+│       ├── page.tsx            ← Dashboard
+│       ├── projects/           ← المشاريع
+│       ├── creative/           ← الإبداع والسيناريو
+│       ├── ai-breakdown/       ← تحليل AI
+│       ├── casting/            ← الكاستينج
+│       ├── crew/               ← الطاقم
+│       ├── schedule/           ← جدول التصوير
+│       ├── budget/             ← الميزانية
+│       ├── equipment/          ← المعدات
+│       ├── locations/          ← المواقع
+│       ├── dam/                ← المكتبة الرقمية
+│       ├── contracts/          ← العقود
+│       ├── clearances/         ← التصاريح
+│       ├── music-rights/       ← حقوق الموسيقى
+│       ├── insurance/          ← التأمين
+│       ├── vfx/                ← VFX والبوست
+│       ├── distribution/       ← التوزيع
+│       ├── analytics/          ← التحليلات
+│       ├── crm/                ← CRM
+│       ├── hr/                 ← الموارد البشرية
+│       └── settings/           ← الإعدادات
+├── components/
+│   ├── ui/                     ← Design System Components
+│   ├── odoo/                   ← OdooRecord, OdooList, Chatter
+│   ├── forms/                  ← OdooForm, FieldRenderer
+│   └── charts/                 ← Analytics Charts
+├── lib/
+│   ├── odoo/
+│   │   ├── client.ts           ← JSON-RPC Client (الكود أدناه)
+│   │   ├── auth.ts             ← Session Management
+│   │   └── upload.ts           ← File Upload Handler
+│   └── store/
+│       ├── auth.store.ts
+│       └── ui.store.ts
+└── hooks/
+    ├── useOdooList.ts
+    ├── useOdooRecord.ts
+    └── useOdooMutation.ts</pre>
+      </div>
+    </div>
+
+    <!-- ══ 4. API CLIENT ══ -->
+    <div class="section" id="api">
+      <div class="section-header">
+        <div class="section-icon">🔌</div>
+        <div>
+          <div class="section-title">٤. طبقة API — OdooClient الكامل</div>
+          <div class="section-subtitle">TypeScript class جاهز للنسخ والاستخدام</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <h3>Client الأساسي</h3>
+        <pre>// lib/odoo/client.ts
+
+class OdooClient {
+  private baseUrl: string;
+  private db: string = 'MediaAi';
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  // ── تسجيل الدخول ──────────────────────────────────
+  async authenticate(username: string, password: string) {
+    const res = await this.jsonRpc('/web/session/authenticate', {
+      db: this.db, login: username, password
+    });
+    return res.result?.uid ? true : false;
+  }
+
+  // ── قراءة قائمة سجلات ─────────────────────────────
+  async searchRead&lt;T&gt;(
+    model: string,
+    domain: any[] = [],
+    fields: string[] = [],
+    options: { limit?: number; offset?: number; order?: string } = {}
+  ): Promise&lt;T[]&gt; {
+    return this.call({
+      model, method: 'search_read',
+      args: [domain],
+      kwargs: { fields, limit: options.limit ?? 80,
+                offset: options.offset ?? 0,
+                order: options.order ?? 'id desc' }
+    });
+  }
+
+  // ── قراءة سجل واحد ────────────────────────────────
+  async read&lt;T&gt;(model: string, id: number, fields: string[]) {
+    const results = await this.call&lt;T[]&gt;({
+      model, method: 'read', args: [[id], fields]
+    });
+    return results[0];
+  }
+
+  // ── إنشاء سجل جديد ────────────────────────────────
+  async create(model: string, values: Record&lt;string, any&gt;): Promise&lt;number&gt; {
+    return this.call({ model, method: 'create', args: [values] });
+  }
+
+  // ── تعديل سجل ─────────────────────────────────────
+  async write(model: string, ids: number[], values: Record&lt;string, any&gt;) {
+    return this.call({ model, method: 'write', args: [ids, values] });
+  }
+
+  // ── حذف سجل ───────────────────────────────────────
+  async unlink(model: string, ids: number[]) {
+    return this.call({ model, method: 'unlink', args: [ids] });
+  }
+
+  // ── عدد السجلات ───────────────────────────────────
+  async searchCount(model: string, domain: any[] = []) {
+    return this.call({ model, method: 'search_count', args: [domain] });
+  }
+
+  // ── تنفيذ زر / أكشن ───────────────────────────────
+  async callButton(model: string, method: string, ids: number[]) {
+    return this.call({ model, method, args: [ids] });
+  }
+
+  // ── رفع ملف ───────────────────────────────────────
+  async uploadAttachment(file: File, resModel: string, resId: number) {
+    const formData = new FormData();
+    formData.append('ufile', file);
+    formData.append('model', resModel);
+    formData.append('id', resId.toString());
+    const res = await fetch(`${this.baseUrl}/web/binary/upload_attachment`, {
+      method: 'POST', body: formData, credentials: 'include'
+    });
+    return res.json();
+  }
+
+  // ── جلب المرفقات ──────────────────────────────────
+  async getAttachments(resModel: string, resId: number) {
+    return this.searchRead('ir.attachment', [
+      ['res_model', '=', resModel], ['res_id', '=', resId]
+    ], ['id', 'name', 'mimetype', 'file_size', 'create_date']);
+  }
+
+  // ── تنفيذ JSON-RPC ────────────────────────────────
+  private async call&lt;T&gt;(options: any): Promise&lt;T&gt; {
+    const response = await this.jsonRpc('/web/dataset/call_kw', {
+      model: options.model, method: options.method,
+      args: options.args ?? [],
+      kwargs: {
+        context: { lang: 'ar_001', tz: 'Asia/Riyadh' },
+        ...options.kwargs
+      }
+    });
+    if (response.error) throw new Error(response.error.data?.message);
+    return response.result;
+  }
+
+  private async jsonRpc(endpoint: string, params: any) {
+    const res = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'call',
+                             id: Date.now(), params })
+    });
+    return res.json();
+  }
+}
+
+export const odoo = new OdooClient(process.env.NEXT_PUBLIC_ODOO_URL!);</pre>
+
+        <h3>Custom Hooks</h3>
+        <pre>// hooks/useOdooList.ts
+export function useOdooList&lt;T&gt;(model, domain = [], fields = [], opts = {}) {
+  return useQuery({
+    queryKey: ['odoo', model, domain, fields],
+    queryFn: () => odoo.searchRead&lt;T&gt;(model, domain, fields, opts),
+    staleTime: 30_000,
+  });
+}
+
+// hooks/useOdooRecord.ts
+export function useOdooRecord&lt;T&gt;(model, id, fields) {
+  return useQuery({
+    queryKey: ['odoo', model, id],
+    queryFn: () => odoo.read&lt;T&gt;(model, id, fields),
+    enabled: !!id,
+  });
+}
+
+// hooks/useOdooCreate.ts
+export function useOdooCreate(model) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (values) => odoo.create(model, values),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['odoo', model] }),
+  });
+}</pre>
+      </div>
+    </div>
+
+    <!-- ══ 5. DESIGN SYSTEM ══ -->
+    <div class="section" id="design">
+      <div class="section-header">
+        <div class="section-icon">🎨</div>
+        <div>
+          <div class="section-title">٥. Design System — Revolut لـ MediaOS</div>
+          <div class="section-subtitle">Tokens + Components + Typography</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <h3>Color Palette</h3>
+        <div class="swatches" style="margin-bottom: 32px;">
+          <div><div class="swatch" style="background:#191c1f"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#191c1f</label></div>
+          <div><div class="swatch" style="background:#ffffff;border:1px solid #e4e4e8"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#ffffff</label></div>
+          <div><div class="swatch" style="background:#f4f4f4"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#f4f4f4</label></div>
+          <div><div class="swatch" style="background:#494fdf"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#494fdf</label></div>
+          <div><div class="swatch" style="background:#00a87e"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#00a87e</label></div>
+          <div><div class="swatch" style="background:#ec7e00"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#ec7e00</label></div>
+          <div><div class="swatch" style="background:#e23b4a"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#e23b4a</label></div>
+          <div><div class="swatch" style="background:#505a63"></div><label style="font-size:10px;color:#8d969e;display:block;margin-top:22px;text-align:center">#505a63</label></div>
+        </div>
+
+        <h3>Typography Scale</h3>
+        <table>
+          <thead><tr><th>الدور</th><th>الخط</th><th>الحجم</th><th>Weight</th><th>Letter-Spacing</th></tr></thead>
+          <tbody>
+            <tr><td>Display Hero</td><td>Aeonik Pro</td><td>80px</td><td>500</td><td>-0.8px</td></tr>
+            <tr><td>Section Heading</td><td>Aeonik Pro</td><td>48px</td><td>500</td><td>-0.48px</td></tr>
+            <tr><td>Card Title</td><td>Aeonik Pro</td><td>32px</td><td>500</td><td>-0.32px</td></tr>
+            <tr><td>Feature Title</td><td>Aeonik Pro</td><td>24px</td><td>500</td><td>0</td></tr>
+            <tr><td>Nav / Button</td><td>Aeonik Pro</td><td>20px</td><td>500</td><td>0</td></tr>
+            <tr><td>Body Large</td><td>Inter / IBM Plex Arabic</td><td>18px</td><td>400</td><td>-0.09px</td></tr>
+            <tr><td>Body</td><td>Inter / IBM Plex Arabic</td><td>16px</td><td>400</td><td>+0.24px</td></tr>
+            <tr><td>Caption</td><td>Inter</td><td>14px</td><td>400</td><td>+0.28px</td></tr>
+            <tr><td>Label</td><td>Inter</td><td>12px</td><td>600</td><td>+0.48px UPPERCASE</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Components</h3>
+        <pre>/* ── Buttons (9999px radius — Revolut universal) ── */
+.btn-primary {
+  background: #191c1f; color: #fff;
+  border-radius: 9999px; padding: 14px 32px;
+  font: 500 20px 'Aeonik Pro'; border: none;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.btn-secondary {
+  background: #f4f4f4; color: #191c1f;
+  border-radius: 9999px; padding: 14px 34px;
+}
+
+.btn-danger {
+  background: #e23b4a; color: #fff;
+  border-radius: 9999px; padding: 14px 32px;
+}
+
+/* ── Cards (ZERO shadows) ── */
+.card {
+  background: #fff; border-radius: 20px;
+  border: 1px solid #e4e4e8; padding: 24px;
+  /* NO box-shadow — depth عبر contrast فقط */
+}
+
+/* ── Input ── */
+.input {
+  background: #f4f4f4; border: 1.5px solid transparent;
+  border-radius: 12px; padding: 14px 16px;
+  font: 400 16px Inter; transition: border-color 0.15s;
+}
+.input:focus { border-color: #494fdf; background: #fff; }
+
+/* ── Status Badge ── */
+.badge-success { background: rgba(0,168,126,0.12); color: #00a87e; }
+.badge-warning { background: rgba(236,126,0,0.12);  color: #ec7e00; }
+.badge-danger  { background: rgba(226,59,74,0.12);  color: #e23b4a; }</pre>
+
+        <div class="warn-box">
+          ⚠️ <strong>ZERO Shadows</strong> — قاعدة Revolut الصارمة: لا <code>box-shadow</code>، لا <code>drop-shadow</code>، لا <code>text-shadow</code>. الـ depth يأتي فقط من تبادل الأقسام الداكنة/الفاتحة والـ whitespace السخي.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 6. SHELL ══ -->
+    <div class="section" id="screens-shell">
+      <div class="section-header">
+        <div class="section-icon">🖥️</div>
+        <div>
+          <div class="section-title">٦. Shell الرئيسي — App Layout</div>
+          <div class="section-subtitle">Sidebar داكن + Top Bar + المحتوى</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <h3>Wireframe البنية</h3>
+        <div class="wireframe">┌──────────────┬────────────────────────────────────────────┐
+│              │  Top Bar (60px) — Logo + Search + Avatar   │
+│   Sidebar    ├────────────────────────────────────────────┤
+│   (260px)    │                                            │
+│              │  Main Content Area (scrollable)            │
+│  bg:#191c1f  │  padding: 40px                             │
+│              │  max-width: 1200px                         │
+│  RTL Right   │                                            │
+└──────────────┴────────────────────────────────────────────┘</div>
+
+        <h3>Sidebar Navigation Groups</h3>
+        <table>
+          <thead><tr><th>المجموعة</th><th>الشاشات</th></tr></thead>
+          <tbody>
+            <tr><td>🎬 الإنتاج</td><td>Dashboard، المشاريع، الجدول</td></tr>
+            <tr><td>✍️ ما قبل الإنتاج</td><td>الإبداع، AI Breakdown، الكاستينج، المواقع</td></tr>
+            <tr><td>👷 التشغيل</td><td>الطاقم، المعدات، السلامة</td></tr>
+            <tr><td>💰 المالية</td><td>الميزانية، الصندوق، المطالبات</td></tr>
+            <tr><td>📄 القانوني</td><td>العقود، التصاريح، حقوق الموسيقى، التأمين</td></tr>
+            <tr><td>⚡ ما بعد الإنتاج</td><td>VFX، المكتبة الرقمية، التوزيع</td></tr>
+            <tr><td>📊 الإدارة</td><td>التحليلات، CRM، الموارد البشرية، الإعدادات</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Nav Item CSS</h3>
+        <pre>.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: 12px;
+  color: rgba(255,255,255,0.6);
+  font: 500 15px var(--font); cursor: pointer;
+  transition: all 0.15s; text-decoration: none;
+}
+.nav-item:hover  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
+.nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }</pre>
+      </div>
+    </div>
+
+    <!-- ══ 7. DASHBOARD ══ -->
+    <div class="section" id="screens-dashboard">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div>
+          <div class="section-title">٧. Dashboard الرئيسي</div>
+          <div class="section-subtitle">KPIs + Charts + Activity Feed</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <h3>Layout</h3>
+        <div class="wireframe">Row 1: KPI Cards (4 أعمدة)
+┌──────────┬──────────┬──────────┬──────────┐
+│ مشاريع  │  طاقم   │ ميزانية │ تصوير   │
+│  نشطة   │  فعال   │  حالة  │  اليوم  │
+│   12    │   47   │  87%   │   6 مشاهد│
+└──────────┴──────────┴──────────┴──────────┘
+
+Row 2: Main Widgets (8 + 4)
+┌────────────────────────┬────────────────┐
+│ Timeline المشاريع      │  مهام عاجلة   │
+│ (Gantt مصغر Recharts)  │  (قائمة)      │
+└────────────────────────┴────────────────┘
+
+Row 3: Charts (6 + 6)
+┌───────────────────┬───────────────────┐
+│ توزيع الميزانية   │ جدول هذا الأسبوع │
+│ (Donut Chart)     │ (Strip Board)     │
+└───────────────────┴───────────────────┘
+
+Row 4: Recent Lists (4 + 4 + 4)
+┌──────────┬──────────┬──────────┐
+│ آخر عقود│ نشاط    │ تنبيهات  │
+└──────────┴──────────┴──────────┘</div>
+
+        <h3>API للـ Dashboard</h3>
+        <pre>const loadDashboard = async () => {
+  const [projects, employees, scheduleToday, budgetAlerts] = await Promise.all([
+    odoo.searchCount('project.project', [['active', '=', true]]),
+    odoo.searchCount('hr.employee', [['active', '=', true]]),
+    odoo.searchRead('media.schedule.line',
+      [['date', '=', today]], ['scene_id', 'location_id', 'call_time']),
+    odoo.searchRead('media.budget.line',
+      [['variance_pct', '&lt;', -10]], ['name', 'variance', 'department_id']),
+  ]);
+};</pre>
+      </div>
+    </div>
+
+    <!-- ══ 8. PATTERN ══ -->
+    <div class="section" id="screens-pattern">
+      <div class="section-header">
+        <div class="section-icon">🔄</div>
+        <div>
+          <div class="section-title">٨. نمط الشاشة العامة (لكل موديل)</div>
+          <div class="section-subtitle">List + Kanban + Filters — نفس النمط لـ 25 موديل</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="wireframe">┌──────────────────────────────────────────────────────┐
+│ [← رجوع]  اسم الموديل                [+ إضافة]     │
+├──────────────────────────────────────────────────────┤
+│ [🔍 بحث____________] [تصفية ▼] [ترتيب ▼] [⊞][☰]  │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  Kanban View (افتراضي):                              │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐            │
+│  │ مسودة│  │ نشط  │  │ تعليق│  │ منتهي│            │
+│  │  3  │  │  8  │  │  1  │  │  12 │            │
+│  │card │  │card │  │card │  │card │            │
+│  │card │  │card │  │     │  │card │            │
+│  └──────┘  └──────┘  └──────┘  └──────┘            │
+│                                                      │
+├──────────────────────────────────────────────────────┤
+│  صفحة 1 من 5   [السابق] [التالي]   عرض: 20 ▼       │
+└──────────────────────────────────────────────────────┘</div>
+
+        <h3>View Modes الثلاثة</h3>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">📋 List View</div>
+            <p style="font-size:13px">جدول مع checkboxes للعمليات الجماعية. أعمدة قابلة للضبط. Inline edit للحقول البسيطة.</p>
+          </div>
+          <div class="card">
+            <div class="card-title">🃏 Kanban View</div>
+            <p style="font-size:13px">كروت مجمعة حسب الحالة <code>stage_id</code>. Drag &amp; Drop لتغيير الحالة. Quick Edit من الكارد.</p>
+          </div>
+          <div class="card">
+            <div class="card-title">📝 Form View</div>
+            <p style="font-size:13px">نموذج تفصيلي كامل. Tabs للبيانات المختلفة. Chatter في الأسفل. File Upload sidebar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 9. FORM ══ -->
+    <div class="section" id="screens-form">
+      <div class="section-header">
+        <div class="section-icon">📝</div>
+        <div>
+          <div class="section-title">٩. Form View — نموذج السجل التفصيلي</div>
+          <div class="section-subtitle">Layout + Chatter + Attachments</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="wireframe">┌──────────────────────────────────────────────────────┐
+│ [← قائمة]  اسم السجل        [تعديل] [حذف] [طباعة] │
+├────────────────────────────┬─────────────────────────┤
+│                            │  Sidebar Info           │
+│  الحقول الأساسية           │  ┌─────────────────┐    │
+│  [اسم المشروع    ]         │  │ الحالة: ● نشط   │    │
+│  [نوع الإنتاج ▼  ]        │  │ المسؤول: أحمد  │    │
+│  [العميل         ]         │  │ تاريخ البدء     │    │
+│  [المخرج         ]         │  │ تاريخ الانتهاء  │    │
+│  [وصف            ]         │  └─────────────────┘    │
+│                            │                         │
+│  Tabs:                     │  Smart Buttons          │
+│  [تفاصيل][ميزانية][طاقم]  │  [12 مهمة][3 عقود]     │
+├────────────────────────────┴─────────────────────────┤
+│  Chatter                                             │
+│  [💬 اكتب تعليقاً...              ] [إرسال]          │
+│  ─────────────────────────────────────────────────   │
+│  👤 نيف النجم — اليوم 10:30                          │
+│  تم تحديث الميزانية المعتمدة                         │
+└──────────────────────────────────────────────────────┘</div>
+
+        <h3>Chatter API</h3>
+        <pre>// جلب الرسائل
+const getMessages = () => odoo.searchRead('mail.message', [
+  ['model', '=', model], ['res_id', '=', id]
+], ['body', 'author_id', 'date', 'attachment_ids']);
+
+// إرسال رسالة
+const postMsg = (body: string) => odoo.call({
+  model, method: 'message_post',
+  args: [id], kwargs: { body, message_type: 'comment' }
+});</pre>
+
+        <h3>Smart Buttons API</h3>
+        <pre>// عدد المهام المرتبطة
+const taskCount = await odoo.searchCount('project.task',
+  [['project_id', '=', projectId]]);
+
+// عدد العقود
+const contractCount = await odoo.searchCount('media.contract',
+  [['project_id', '=', projectId]]);</pre>
+      </div>
+    </div>
+
+    <!-- ══ 10. SPECIAL SCREENS ══ -->
+    <div class="section" id="screens-special">
+      <div class="section-header">
+        <div class="section-icon">⭐</div>
+        <div>
+          <div class="section-title">١٠. الشاشات المخصصة</div>
+          <div class="section-subtitle">Strip Board + DAM + AI Breakdown + Budget Variance</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <h3>📅 Shooting Schedule — Strip Board</h3>
+        <div class="wireframe">يوم 1 (السبت 12/4)     يوم 2 (الأحد 13/4)
+┌───────────────────┐   ┌───────────────────┐
+│ ■ مشهد 14 - EXT  │   │ ■ مشهد 2 - INT   │
+│ 📍 الرياض        │   │ 📍 الاستوديو B    │
+│ ⏰ 06:00–12:00   │   │ ⏰ 08:00–16:00   │
+│ 👥 12 ممثل       │   │ 👥 5 ممثلين      │
+├───────────────────┤   ├───────────────────┤
+│ ■ مشهد 8 - INT   │   │ ■ مشهد 19 - EXT  │
+│ 📍 مبنى المحاكم  │   │ 📍 شارع العليا   │
+└───────────────────┘   └───────────────────┘
+[← السابق]  الأسبوع 3 من 8  [التالي →]
+Drag & Drop لإعادة الترتيب</div>
+
+        <h3>🗄️ DAM — المكتبة الرقمية</h3>
+        <div class="wireframe">┌──────────────┬──────────────────────────────────────────┐
+│              │  [+ رفع ملفات]  [+ مجلد]  [🔍 بحث]     │
+│  📁 شجرة     ├──────────────────────────────────────────┤
+│  المجلدات   │  Filter: [الكل▼] [صور] [فيديو] [PDF]     │
+│              │  ┌──────┬──────┬──────┬──────┬──────┐   │
+│  ├─ مشاريع  │  │  🖼   │  🎬  │  📄  │  🖼  │  🎬  │   │
+│  ├─ خامات   │  │scene1│rushes│brief │logo  │final │   │
+│  ├─ مونتاج  │  └──────┴──────┴──────┴──────┴──────┘   │
+│  └─ تسليمات │  [سحب وإفلات لرفع الملفات هنا]          │
+└──────────────┴──────────────────────────────────────────┘</div>
+
+        <h3>🤖 AI Script Breakdown</h3>
+        <div class="wireframe">┌────────────────────────┬────────────────────────────┐
+│  Script Input          │  Breakdown Results         │
+│  ────────────────────  │  ────────────────────────  │
+│  [رفع PDF / FDX]       │  📌 مشهد 1 — EXT/DAY      │
+│                        │  ├─ 📍 مواقع: [الرياض+]   │
+│  [نص السكريبت...]      │  ├─ 🎭 ممثلين: [أحمد+]    │
+│                        │  ├─ 🎬 معدات: [كاميرا+]   │
+│  ────────────────────  │  └─ 🚗 مركبات: [سيارة+]   │
+│  [🤖 تحليل AI]        │                            │
+│                        │  📌 مشهد 2 — INT/NIGHT    │
+│  ← يستدعي Claude API  │  ├─ ...                    │
+│    عبر media_ai module │                            │
+│                        │  [حفظ كل المشاهد في Odoo] │
+└────────────────────────┴────────────────────────────┘</div>
+
+        <h3>💰 Budget Variance Analysis</h3>
+        <pre>// جدول المقارنة: مُعتمد vs فعلي vs متوقع
+interface BudgetLine {
+  department: string;
+  approved: number;    // المعتمد
+  actual: number;      // الفعلي
+  estimated: number;   // المتوقع
+  variance: number;    // approved - actual
+  variance_pct: number // %
+}
+
+// مكوّن خلية الـ Variance
+const VarianceCell = ({ value }) => (
+  &lt;span className={`badge badge-${value >= 0 ? 'success' : 'danger'}`}&gt;
+    {value >= 0 ? '+' : ''}{value.toLocaleString('ar-SA')}
+  &lt;/span&gt;
+);</pre>
+      </div>
+    </div>
+
+    <!-- ══ 11. UPLOAD ══ -->
+    <div class="section" id="upload">
+      <div class="section-header">
+        <div class="section-icon">📤</div>
+        <div>
+          <div class="section-title">١١. رفع الملفات</div>
+          <div class="section-subtitle">Dropzone + Resumable Upload + Preview</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <pre>// components/odoo/FileUploader.tsx
+import { useDropzone } from 'react-dropzone';
+
+export const FileUploader = ({ model, recordId, onComplete }) => {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: async (files) => {
+      for (const file of files) {
+        const result = await odoo.uploadAttachment(file, model, recordId);
+        onComplete?.(result);
+      }
+    },
+    accept: {
+      'image/*': [],
+      'application/pdf': [],
+      'video/*': [],
+      'application/zip': [],
+    },
+    maxSize: 500 * 1024 * 1024,  // 500MB
+  });
+
+  return (
+    &lt;div {...getRootProps()} style={{
+      border: `2px dashed ${isDragActive ? '#494fdf' : '#e4e4e8'}`,
+      borderRadius: '16px', padding: '40px',
+      textAlign: 'center',
+      background: isDragActive ? 'rgba(73,79,223,0.04)' : '#f4f4f4',
+      cursor: 'pointer', transition: 'all 0.2s',
+    }}&gt;
+      &lt;input {...getInputProps()} /&gt;
+      &lt;p&gt;اسحب الملفات هنا أو انقر للاختيار&lt;/p&gt;
+      &lt;p style={{color:'#8d969e', fontSize:13}}&gt;
+        صور، فيديو، PDF، ZIP — حتى 500MB
+      &lt;/p&gt;
+    &lt;/div&gt;
+  );
+};</pre>
+      </div>
+    </div>
+
+    <!-- ══ 12. REALTIME ══ -->
+    <div class="section" id="realtime">
+      <div class="section-header">
+        <div class="section-icon">⚡</div>
+        <div>
+          <div class="section-title">١٢. Real-time — Odoo WebSocket Bus</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <pre>// lib/odoo/bus.ts
+class OdooBus {
+  private ws: WebSocket | null = null;
+  private listeners = new Map&lt;string, Function[]&gt;();
+
+  connect() {
+    this.ws = new WebSocket(`wss://${ODOO_HOST}/websocket`);
+    this.ws.onmessage = (event) => {
+      const messages = JSON.parse(event.data);
+      messages.forEach((msg: any) => {
+        const handlers = this.listeners.get(msg.type) ?? [];
+        handlers.forEach(fn => fn(msg.payload));
+      });
+    };
+  }
+
+  subscribe(channel: string, callback: Function) {
+    if (!this.listeners.has(channel)) this.listeners.set(channel, []);
+    this.listeners.get(channel)!.push(callback);
+  }
+}
+
+// الاستخدام — تحديث Chatter فورياً
+bus.subscribe('mail.message', (msg) => {
+  queryClient.invalidateQueries({ queryKey: ['chatter', msg.res_id] });
+});
+
+// تحديث الـ Dashboard عند تغيير حالة المشروع
+bus.subscribe('project.project', (project) => {
+  queryClient.invalidateQueries({ queryKey: ['odoo', 'project.project'] });
+});</pre>
+      </div>
+    </div>
+
+    <!-- ══ 13. PERFORMANCE ══ -->
+    <div class="section" id="performance">
+      <div class="section-header">
+        <div class="section-icon">🚀</div>
+        <div>
+          <div class="section-title">١٣. الأداء والـ Mobile</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <h3>Performance Strategies</h3>
+        <div class="step-list">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4>Virtual Scrolling</h4>
+              <p>استخدام <code>@tanstack/react-virtual</code> للقوائم الكبيرة (+500 سجل) — الـ DOM يعرض فقط العناصر المرئية.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4>Optimistic Updates</h4>
+              <p>تحديث الـ UI فوراً قبل انتظار response من Odoo — تجربة مستخدم فورية بدون loading spinner.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4>Prefetching</h4>
+              <p>عند hover على كارد، يبدأ جلب بيانات السجل مسبقاً — بحيث عند الضغط تظهر الصفحة فوراً.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <h4>Infinite Scroll</h4>
+              <p>تحميل 20 سجل في المرة الأولى، ثم تحميل المزيد عند الوصول لنهاية القائمة.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+              <h4>Image Lazy Loading</h4>
+              <p>صور المرفقات والـ avatars تُحمَّل فقط عند دخولها في الـ viewport.</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:24px">Mobile Responsive Strategy</h3>
+        <table>
+          <thead><tr><th>الشاشة</th><th>العرض</th><th>التغييرات</th></tr></thead>
+          <tbody>
+            <tr><td>Mobile</td><td>&lt;768px</td><td>Sidebar → Bottom Tab Bar (5 tabs)، List → Card Stack، Form → Single Column</td></tr>
+            <tr><td>Tablet</td><td>768–1024px</td><td>Sidebar → Icon-only (48px)، Grid → 2 columns</td></tr>
+            <tr><td>Desktop</td><td>&gt;1024px</td><td>Full layout، Sidebar 260px ثابت</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ 14. SUMMARY ══ -->
+    <div class="section" id="summary">
+      <div class="section-header">
+        <div class="section-icon">✅</div>
+        <div>
+          <div class="section-title">١٤. ملخص قرارات التصميم والتطوير</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead><tr><th>القرار</th><th>الاختيار</th><th>السبب</th></tr></thead>
+          <tbody>
+            <tr><td>Color Palette</td><td><code>#191c1f</code> + white</td><td>Revolut Premium Look</td></tr>
+            <tr><td>Typography</td><td>Aeonik Pro + IBM Plex Arabic</td><td>Desktop + RTL عربي</td></tr>
+            <tr><td>Shadows</td><td><strong>ZERO shadows</strong></td><td>Revolut Design Principle</td></tr>
+            <tr><td>Button Shape</td><td>Pill <code>9999px</code></td><td>Revolut Universal</td></tr>
+            <tr><td>Card Radius</td><td><code>20px</code></td><td>Revolut Card Style</td></tr>
+            <tr><td>State Management</td><td>Zustand + TanStack Query</td><td>بسيط وقوي معاً</td></tr>
+            <tr><td>Forms</td><td>React Hook Form + Zod</td><td>Type-safe validation</td></tr>
+            <tr><td>Charts</td><td>Recharts</td><td>خفيف + React-native</td></tr>
+            <tr><td>Upload</td><td>react-dropzone + Tus.js</td><td>استئناف رفع الملفات الكبيرة</td></tr>
+            <tr><td>Drag & Drop</td><td>@dnd-kit/core</td><td>Modern + Accessible</td></tr>
+            <tr><td>Real-time</td><td>Odoo WebSocket Bus</td><td>Native Odoo Integration</td></tr>
+            <tr><td>Language</td><td>العربية أولاً (RTL)</td><td>السوق الخليجي</td></tr>
+            <tr><td>Deployment</td><td>Docker + Nginx</td><td>نفس بيئة Odoo</td></tr>
+          </tbody>
+        </table>
+
+        <div class="info-box" style="margin-top:20px">
+          🔒 <strong>Security Priority:</strong> كل العمليات تمر عبر Odoo permissions system — لا bypass، لا direct DB access. المستخدم يرى فقط ما تسمح له صلاحياته في Odoo.
+        </div>
+
+        <h3>Environment Variables</h3>
+        <pre># .env.local
+NEXT_PUBLIC_ODOO_URL=https://your-odoo-server.com
+NEXT_PUBLIC_ODOO_DB=MediaAi
+NEXT_PUBLIC_APP_NAME=MediaOS
+# Server-side only
+ODOO_ADMIN_PASSWORD=your-admin-password</pre>
+
+        <hr>
+        <p style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:0">
+          وثيقة تم توليدها تلقائياً من تحليل backup قاعدة بيانات MediaAi v19.0<br>
+          46 موديل مثبت • 25 موديل مخصص • إبريل 2026
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /layout -->
+
+<script>
+// Active nav highlighting
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.section');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navItems.forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(s => observer.observe(s));
+
+// Smooth scroll
+navItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(item.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
