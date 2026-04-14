@@ -4,8 +4,9 @@ import {
   Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { odoo } from '../../lib/odoo';
+import { getOdooClient } from '../../lib/odoo';
 import { useAuthStore } from '../../store/auth';
+import { useConnectionStore } from '../../store/connection';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -13,6 +14,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
+  const { serverUrl, db } = useConnectionStore();
+
+  const displayHost = (() => {
+    try { return new URL(serverUrl ?? '').hostname; } catch { return serverUrl ?? ''; }
+  })();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -21,7 +27,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const session = await odoo.authenticate(username.trim(), password);
+      const session = await getOdooClient().authenticate(username.trim(), password);
       setSession(session);
       router.replace('/(tabs)/');
     } catch (err) {
@@ -42,11 +48,27 @@ export default function LoginScreen() {
           <View style={{ width: 64, height: 64, backgroundColor: '#494fdf', borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
             <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>M</Text>
           </View>
-          <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700', marginBottom: 4, writingDirection: 'rtl' }}>MediaOS</Text>
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 40, textAlign: 'center' }}>نظام إدارة الإنتاج الإعلامي</Text>
+          <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700', marginBottom: 4 }}>MediaOS</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, marginBottom: 32, textAlign: 'center' }}>نظام إدارة الإنتاج الإعلامي</Text>
 
           {/* Form */}
           <View style={{ width: '100%', maxWidth: 380, backgroundColor: '#fff', borderRadius: 20, padding: 28 }}>
+
+            {/* Server badge */}
+            {serverUrl && db && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f3f4f6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#00a87e' }} />
+                  <Text style={{ fontSize: 12, color: '#6b7280', flex: 1 }} numberOfLines={1}>
+                    {displayHost} · {db}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => router.replace('/(auth)/connect')} style={{ marginRight: 8 }}>
+                  <Text style={{ fontSize: 12, color: '#494fdf', fontWeight: '600' }}>تغيير</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <Text style={{ fontSize: 11, fontWeight: '600', color: '#505a63', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'right' }}>اسم المستخدم</Text>
             <TextInput
               value={username}
@@ -56,7 +78,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               textAlign="right"
-              style={{ backgroundColor: '#f4f4f4', borderRadius: 12, padding: 14, fontSize: 15, color: '#191c1f', marginBottom: 16, textAlign: 'right' }}
+              style={{ backgroundColor: '#f4f4f4', borderRadius: 12, padding: 14, fontSize: 15, color: '#191c1f', marginBottom: 16 }}
             />
 
             <Text style={{ fontSize: 11, fontWeight: '600', color: '#505a63', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'right' }}>كلمة المرور</Text>
@@ -67,7 +89,7 @@ export default function LoginScreen() {
               placeholderTextColor="#8d969e"
               secureTextEntry
               textAlign="right"
-              style={{ backgroundColor: '#f4f4f4', borderRadius: 12, padding: 14, fontSize: 15, color: '#191c1f', marginBottom: 24, textAlign: 'right' }}
+              style={{ backgroundColor: '#f4f4f4', borderRadius: 12, padding: 14, fontSize: 15, color: '#191c1f', marginBottom: 24 }}
             />
 
             <TouchableOpacity

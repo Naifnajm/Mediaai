@@ -1,12 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { odoo } from '@/lib/odoo/client';
+import { getOdooClient } from '@/lib/odoo/client';
 import { useAuthStore } from '@/store/auth.store';
+import { useConnectionStore } from '@/store/connection.store';
 
 const schema = z.object({
   username: z.string().min(1, 'اسم المستخدم مطلوب'),
@@ -18,7 +19,15 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
+  const { serverUrl, db } = useConnectionStore();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // Guard: redirect to connect if no server configured
+  useEffect(() => {
+    if (!serverUrl || !db) {
+      router.replace('/connect');
+    }
+  }, [serverUrl, db, router]);
 
   const {
     register,
@@ -29,13 +38,24 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     setServerError(null);
     try {
-      const session = await odoo.authenticate(data.username, data.password);
+      const session = await getOdooClient().authenticate(data.username, data.password);
       setSession(session);
       router.push('/dashboard');
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'خطأ في تسجيل الدخول');
     }
   };
+
+  if (!serverUrl || !db) return null;
+
+  // Display a shortened host for the server badge
+  const displayHost = (() => {
+    try {
+      return new URL(serverUrl).hostname;
+    } catch {
+      return serverUrl;
+    }
+  })();
 
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center p-4">
@@ -49,7 +69,7 @@ export default function LoginPage() {
         className="relative w-full max-w-md"
       >
         {/* Card */}
-        <div className="bg-white rounded-lg p-10">
+        <div className="bg-white rounded-2xl p-10">
           {/* Logo */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-dark rounded-xl mb-4">
@@ -57,6 +77,22 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-bold text-text-primary tracking-tight font-display">MediaOS</h1>
             <p className="text-text-muted text-sm mt-1">نظام إدارة الإنتاج الإعلامي</p>
+          </div>
+
+          {/* Server badge */}
+          <div className="flex items-center justify-between bg-surface rounded-xl px-4 py-2.5 mb-6" dir="rtl">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2 h-2 rounded-full bg-success shrink-0" />
+              <span className="text-xs text-text-secondary truncate" dir="ltr">
+                {displayHost} · {db}
+              </span>
+            </div>
+            <button
+              onClick={() => router.push('/connect')}
+              className="text-xs text-accent font-medium hover:opacity-75 shrink-0 mr-2"
+            >
+              تغيير
+            </button>
           </div>
 
           {/* Form */}
@@ -97,7 +133,7 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-[rgba(226,59,74,0.08)] border border-[rgba(226,59,74,0.2)] rounded-md p-3"
+                className="bg-[rgba(226,59,74,0.08)] border border-[rgba(226,59,74,0.2)] rounded-xl p-3"
               >
                 <p className="text-danger text-sm">{serverError}</p>
               </motion.div>
@@ -110,7 +146,7 @@ export default function LoginPage() {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4 animate-spin-slow" viewBox="0 0 24 24" fill="none">
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>

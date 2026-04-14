@@ -4,20 +4,24 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
 import { useAuthStore } from '@/store/auth.store';
+import { useConnectionStore } from '@/store/connection.store';
 import { useUiStore } from '@/store/ui.store';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = useAuthStore((s) => s.session);
+  const { serverUrl, db } = useConnectionStore();
   const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const router = useRouter();
 
   useEffect(() => {
-    if (!session) {
+    if (!serverUrl || !db) {
+      router.push('/connect');
+    } else if (!session) {
       router.push('/login');
     }
-  }, [session, router]);
+  }, [session, serverUrl, db, router]);
 
-  if (!session) return null;
+  if (!serverUrl || !db || !session) return null;
 
   const marginRight = sidebarCollapsed ? '60px' : '260px';
 
