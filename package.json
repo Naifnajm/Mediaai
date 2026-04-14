@@ -22,6 +22,9 @@
   "pnpm": {
     "peerDependencyRules": {
       "ignoreMissing": ["@types/react-native"]
+    },
+    "overrides": {
+      "@types/react-native": "0.72.8"
     }
   }
 }
