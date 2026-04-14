@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   transpilePackages: ['@mediaos/api', '@mediaos/types', '@mediaos/ui'],
   images: {
     remotePatterns: [
