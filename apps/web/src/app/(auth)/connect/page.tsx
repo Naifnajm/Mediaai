@@ -9,12 +9,14 @@ export default function ConnectPage() {
   const router = useRouter();
   const { setConnection } = useConnectionStore();
 
-  const [serverUrl, setServerUrl] = useState('https://albait.jtcgov.com');
+  const [serverUrl, setServerUrl] = useState('https://albait.jtcgov.com/odoo');
   const [databases, setDatabases] = useState<string[]>([]);
   const [selectedDb, setSelectedDb] = useState('');
+  const [manualDb, setManualDb] = useState('MediaAi');
   const [detecting, setDetecting] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
   const [detected, setDetected] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDetect = async () => {
@@ -23,6 +25,7 @@ export default function ConnectPage() {
     setDetected(false);
     setDatabases([]);
     setSelectedDb('');
+    setManualMode(false);
 
     try {
       const res = await fetch('/api/detect-dbs', {
@@ -32,31 +35,35 @@ export default function ConnectPage() {
       });
       const data = (await res.json()) as { databases?: string[]; error?: string };
       if (!res.ok || data.error) {
-        setDetectError(data.error ?? 'تعذر الاتصال بالخادم');
+        // Auto-detect failed → switch to manual mode
+        setDetectError('تعذّر اكتشاف قواعد البيانات تلقائياً. أدخل اسمها يدوياً:');
+        setManualMode(true);
         return;
       }
       const dbs = data.databases ?? [];
       setDatabases(dbs);
       setDetected(true);
       if (dbs.length === 1) setSelectedDb(dbs[0]!);
-      // Auto-select MediaAi if present
       const mediaAi = dbs.find((d) => d.toLowerCase() === 'mediaai');
       if (mediaAi) setSelectedDb(mediaAi);
     } catch {
-      setDetectError('تعذر الاتصال — تأكد من صحة الرابط');
+      setDetectError('تعذّر الاتصال. أدخل اسم قاعدة البيانات يدوياً:');
+      setManualMode(true);
     } finally {
       setDetecting(false);
     }
   };
 
   const handleConnect = () => {
-    if (!serverUrl || !selectedDb) return;
+    const db = manualMode ? manualDb.trim() : selectedDb;
+    if (!serverUrl || !db) return;
     resetOdooClient();
-    setConnection(serverUrl.replace(/\/$/, ''), selectedDb);
+    setConnection(serverUrl.replace(/\/$/, ''), db);
     router.push('/login');
   };
 
-  const canConnect = detected && selectedDb && !detecting;
+  const effectiveDb = manualMode ? manualDb.trim() : selectedDb;
+  const canConnect = !!effectiveDb && !detecting;
 
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center p-4">
@@ -82,7 +89,7 @@ export default function ConnectPage() {
             <p className="text-text-muted text-sm mt-1">أدخل رابط خادم Odoo الخاص بك</p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Server URL */}
             <div>
               <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
@@ -99,9 +106,10 @@ export default function ConnectPage() {
                     setDatabases([]);
                     setSelectedDb('');
                     setDetectError(null);
+                    setManualMode(false);
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && handleDetect()}
-                  placeholder="https://your-odoo.com"
+                  placeholder="https://your-odoo.com/odoo"
                   dir="ltr"
                   className="flex-1 bg-surface border border-transparent rounded-md px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-accent focus:bg-white outline-none text-[14px] font-mono"
                 />
@@ -118,33 +126,53 @@ export default function ConnectPage() {
                       </svg>
                       جاري…
                     </span>
-                  ) : (
-                    'كشف'
-                  )}
+                  ) : 'كشف'}
                 </button>
               </div>
+              <p className="text-text-muted text-[11px] mt-1.5 text-right">
+                مثال: https://albait.jtcgov.com/odoo
+              </p>
             </div>
 
-            {/* Error */}
+            {/* Error + manual fallback */}
             <AnimatePresence>
               {detectError && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="bg-[rgba(226,59,74,0.08)] border border-[rgba(226,59,74,0.2)] rounded-xl p-3"
+                  exit={{ opacity: 0 }}
+                  className="bg-[rgba(236,126,0,0.08)] border border-[rgba(236,126,0,0.2)] rounded-xl p-3"
                 >
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-danger mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-danger text-sm">{detectError}</p>
-                  </div>
+                  <p className="text-warning text-sm">{detectError}</p>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Database selector */}
+            {/* Manual DB input */}
+            <AnimatePresence>
+              {manualMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <label className="block text-xs font-semibold text-text-secondary mb-2 uppercase tracking-wide">
+                    اسم قاعدة البيانات
+                  </label>
+                  <input
+                    type="text"
+                    value={manualDb}
+                    onChange={(e) => setManualDb(e.target.value)}
+                    placeholder="MediaAi"
+                    dir="ltr"
+                    className="w-full bg-surface border border-transparent rounded-md px-4 py-3 text-text-primary placeholder:text-text-muted focus:border-accent focus:bg-white outline-none text-[15px] font-mono"
+                    autoFocus
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Auto-detected DB list */}
             <AnimatePresence>
               {detected && databases.length > 0 && (
                 <motion.div
@@ -166,9 +194,7 @@ export default function ConnectPage() {
                             : 'border-transparent bg-surface text-text-primary hover:border-text-muted/30'
                         }`}
                       >
-                        <span dir="ltr" className="font-mono">
-                          {db}
-                        </span>
+                        <span dir="ltr" className="font-mono">{db}</span>
                         {selectedDb === db && (
                           <svg className="w-4 h-4 text-accent shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -179,25 +205,15 @@ export default function ConnectPage() {
                   </div>
                 </motion.div>
               )}
-
-              {detected && databases.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-[rgba(236,126,0,0.08)] border border-[rgba(236,126,0,0.2)] rounded-xl p-3"
-                >
-                  <p className="text-warning text-sm">لا توجد قواعد بيانات متاحة على هذا الخادم</p>
-                </motion.div>
-              )}
             </AnimatePresence>
 
             {/* Connect button */}
             <button
               onClick={handleConnect}
               disabled={!canConnect}
-              className="w-full bg-accent text-white rounded-pill py-3.5 text-[15px] font-semibold mt-1 hover:opacity-85 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+              className="w-full bg-accent text-white rounded-pill py-3.5 text-[15px] font-semibold hover:opacity-85 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
             >
-              اتصال بـ {selectedDb || '…'}
+              {effectiveDb ? `اتصال بـ ${effectiveDb}` : 'اكتشف قاعدة البيانات أولاً'}
             </button>
           </div>
 

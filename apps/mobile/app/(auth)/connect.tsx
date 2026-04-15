@@ -17,9 +17,11 @@ export default function ConnectScreen() {
   const router = useRouter();
   const { setConnection } = useConnectionStore();
 
-  const [serverUrl, setServerUrl] = useState('https://albait.jtcgov.com');
+  const [serverUrl, setServerUrl] = useState('https://albait.jtcgov.com/odoo');
   const [databases, setDatabases] = useState<string[]>([]);
   const [selectedDb, setSelectedDb] = useState('');
+  const [manualDb, setManualDb] = useState('MediaAi');
+  const [manualMode, setManualMode] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [detected, setDetected] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
@@ -33,6 +35,7 @@ export default function ConnectScreen() {
     setDetected(false);
     setDatabases([]);
     setSelectedDb('');
+    setManualMode(false);
 
     try {
       const res = await fetch(`${clean}/web/database/list`, {
@@ -45,7 +48,8 @@ export default function ConnectScreen() {
       const data = (await res.json()) as { result?: string[]; error?: { data?: { message?: string } } };
 
       if (data.error) {
-        setDetectError(data.error.data?.message ?? 'خطأ من الخادم');
+        setDetectError('تعذّر الاكتشاف التلقائي — أدخل اسم قاعدة البيانات يدوياً');
+        setManualMode(true);
         return;
       }
 
@@ -59,24 +63,23 @@ export default function ConnectScreen() {
       const mediaAi = dbs.find((d) => d.toLowerCase() === 'mediaai');
       if (mediaAi) setSelectedDb(mediaAi);
     } catch (err) {
-      setDetectError(
-        err instanceof Error && err.message.includes('timeout')
-          ? 'انتهت مهلة الاتصال — تأكد من الرابط'
-          : 'تعذر الاتصال — تأكد من صحة الرابط'
-      );
+      setDetectError('تعذّر الاكتشاف التلقائي — أدخل اسم قاعدة البيانات يدوياً');
+      setManualMode(true);
     } finally {
       setDetecting(false);
     }
   };
 
   const handleConnect = () => {
-    if (!serverUrl || !selectedDb) return;
+    const db = manualMode ? manualDb.trim() : selectedDb;
+    if (!serverUrl || !db) return;
     resetOdooClient();
-    setConnection(serverUrl.trim().replace(/\/$/, ''), selectedDb);
+    setConnection(serverUrl.trim().replace(/\/$/, ''), db);
     router.replace('/(auth)/login');
   };
 
-  const canConnect = detected && !!selectedDb && !detecting;
+  const effectiveDb = manualMode ? manualDb.trim() : selectedDb;
+  const canConnect = !!effectiveDb && !detecting;
 
   return (
     <ScrollView
