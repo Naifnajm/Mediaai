@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════
 //  OdooClient — Dynamic singleton (reads from connection store)
+//  Uses /api/odoo-rpc proxy in browser to avoid CORS
 // ═══════════════════════════════════════════════════════
 import { OdooClient } from '@mediaos/api';
 
@@ -31,7 +32,10 @@ function readConnection(): { serverUrl: string; db: string } {
 export function getOdooClient(): OdooClient {
   if (!_client) {
     const { serverUrl, db } = readConnection();
-    _client = new OdooClient(serverUrl, db);
+    _client = new OdooClient(serverUrl, db, {
+      // Proxy all browser requests through Next.js to avoid CORS
+      proxyUrl: '/api/odoo-rpc',
+    });
   }
   return _client;
 }

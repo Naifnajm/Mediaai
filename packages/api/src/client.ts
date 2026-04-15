@@ -31,11 +31,13 @@ export class OdooClient {
   private baseUrl: string;
   readonly db: string;
   private _session: AuthSession | null = null;
+  private proxyUrl?: string;
 
-  constructor(baseUrl: string, db: string = 'MediaAi') {
+  constructor(baseUrl: string, db: string = 'MediaAi', options?: { proxyUrl?: string }) {
     // Strip trailing slash
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.db = db;
+    this.proxyUrl = options?.proxyUrl;
   }
 
   get session(): AuthSession | null {
@@ -345,19 +347,33 @@ export class OdooClient {
   }
 
   async jsonRpc<T = unknown>(endpoint: string, params: unknown): Promise<T> {
-    const body: JsonRpcRequest = {
-      jsonrpc: '2.0',
-      method: 'call',
-      id: Date.now(),
-      params: params as Record<string, unknown>,
-    };
+    let res: Response;
 
-    const res = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    });
+    if (this.proxyUrl) {
+      // Route through proxy (avoids CORS in browser)
+      res = await fetch(this.proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          odooUrl: `${this.baseUrl}${endpoint}`,
+          params,
+        }),
+      });
+    } else {
+      const body: JsonRpcRequest = {
+        jsonrpc: '2.0',
+        method: 'call',
+        id: Date.now(),
+        params: params as Record<string, unknown>,
+      };
+      res = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+    }
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
