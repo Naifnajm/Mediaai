@@ -1,53 +1,68 @@
 // ═══════════════════════════════════════════════════════
 //  API Route: odoo-rpc — proxies all Odoo JSON-RPC calls
-//  Runs server-side → no CORS, forwards session cookies
+//  Always returns HTTP 200; errors go inside json.error
 // ═══════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from 'next/server';
 
+function errorResponse(message: string, code = 503) {
+  return NextResponse.json({
+    jsonrpc: '2.0',
+    id: 0,
+    error: { code, message, data: { message } },
+  });
+}
+
 export async function POST(req: NextRequest) {
+  let odooUrl = '';
   try {
-    const { odooUrl, params } = (await req.json()) as {
-      odooUrl: string;
-      params: unknown;
-    };
+    const body = (await req.json()) as { odooUrl?: string; params?: unknown };
+    odooUrl = body.odooUrl ?? '';
 
-    if (!odooUrl) {
-      return NextResponse.json({ error: 'odooUrl مطلوب' }, { status: 400 });
-    }
+    if (!odooUrl) return errorResponse('odooUrl مطلوب', 400);
 
-    const body = JSON.stringify({
+    const rpcBody = JSON.stringify({
       jsonrpc: '2.0',
       method: 'call',
       id: Date.now(),
-      params,
+      params: body.params ?? {},
     });
 
     const res = await fetch(odooUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Forward the browser's session cookie to Odoo
+        Accept: 'application/json',
         ...(req.headers.get('cookie') ? { Cookie: req.headers.get('cookie')! } : {}),
       },
-      body,
+      body: rpcBody,
       signal: AbortSignal.timeout(30000),
     });
 
-    const data = await res.json();
-    const response = NextResponse.json(data);
+    // Read raw text first so we can diagnose non-JSON responses
+    const text = await res.text();
 
-    // Forward Odoo session cookies back to the browser
-    const setCookie = res.headers.get('set-cookie');
-    if (setCookie) {
-      response.headers.set('set-cookie', setCookie);
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Odoo returned HTML or non-JSON (maintenance page, WAF block, etc.)
+      return errorResponse(`الخادم أعاد استجابة غير متوقعة (HTTP ${res.status})`);
     }
+
+    const response = NextResponse.json(data); // always HTTP 200 from proxy
+
+    // Forward Odoo session cookie to the browser
+    const setCookie = res.headers.get('set-cookie');
+    if (setCookie) response.headers.set('set-cookie', setCookie);
 
     return response;
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'خطأ في الاتصال بـ Odoo';
-    return NextResponse.json(
-      { jsonrpc: '2.0', id: 0, error: { code: 503, message, data: { message } } },
-      { status: 503 }
-    );
+    const message =
+      err instanceof Error
+        ? err.message.includes('fetch')
+          ? `تعذّر الوصول إلى الخادم: ${odooUrl}`
+          : err.message
+        : 'خطأ في الاتصال';
+    return errorResponse(message);
   }
 }
